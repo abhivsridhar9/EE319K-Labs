@@ -1,0 +1,224 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;****************** main.s ***************
+    2 00000000         ; Program initially written by: Yerraballi and Valvano
+    3 00000000         ; Author: Abhishek Sridhar
+    4 00000000         ; Date Created: 1/15/2018 
+    5 00000000         ; Last Modified: 2/4/2019 
+    6 00000000         ; Brief description of the program: Spring 2019 Lab1
+    7 00000000         ; The objective of this system is to implement odd-bit c
+                       ounting system
+    8 00000000         ; Hardware connections: 
+    9 00000000         ;  Output is positive logic, 1 turns on the LED, 0 turns
+                        off the LED
+   10 00000000         ;  Inputs are negative logic, meaning switch not pressed
+                        is 1, pressed is 0
+   11 00000000         ;    PE0 is an input 
+   12 00000000         ;    PE1 is an input 
+   13 00000000         ;    PE2 is an input 
+   14 00000000         ;    PE3 is the output
+   15 00000000         ; Overall goal: 
+   16 00000000         ;   Make the output 1 if there is an odd number of 1's a
+                       t the inputs, 
+   17 00000000         ;     otherwise make the output 0
+   18 00000000         ; The specific operation of this system 
+   19 00000000         ;   Initialize Port E to make PE0,PE1,PE2 inputs and PE3
+                        an output
+   20 00000000         ;   Over and over, read the inputs, calculate the result
+                        and set the output
+   21 00000000         
+   22 00000000         ; NOTE: Do not use any conditional branches in your solu
+                       tion. 
+   23 00000000         ;       We want you to think of the solution in terms of
+                        logical and shift operations
+   24 00000000         
+   25 00000000 400243FC 
+                       GPIO_PORTE_DATA_R
+                               EQU              0x400243FC
+   26 00000000 40024400 
+                       GPIO_PORTE_DIR_R
+                               EQU              0x40024400
+   27 00000000 4002451C 
+                       GPIO_PORTE_DEN_R
+                               EQU              0x4002451C
+   28 00000000 400FE608 
+                       SYSCTL_RCGCGPIO_R
+                               EQU              0x400FE608
+   29 00000000         
+   30 00000000                 THUMB
+   31 00000000                 AREA             DATA, ALIGN=2
+   32 00000000         ;global variables go here
+   33 00000000                 ALIGN
+   34 00000000                 AREA             |.text|, CODE, READONLY, ALIGN=
+2
+   35 00000000                 EXPORT           Start
+   36 00000000         Start
+   37 00000000         ; code to execute once at start goes here
+   38 00000000 4814            LDR              R0,=SYSCTL_RCGCGPIO_R
+   39 00000002 F04F 0110       MOV              R1, #0x10
+   40 00000006 6001            STR              R1,[R0]
+   41 00000008         
+   42 00000008 BF00            NOP
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   43 0000000A BF00            NOP
+   44 0000000C BF00            NOP
+   45 0000000E BF00            NOP
+   46 00000010         
+   47 00000010 4811            LDR              R0, =GPIO_PORTE_DIR_R
+   48 00000012 F04F 0108       MOV              R1, #0x08
+   49 00000016 6001            STR              R1,[R0]     ; assign the output
+                                                            s and inputs to the
+                                                             different pins
+   50 00000018         
+   51 00000018 4810            LDR              R0, =GPIO_PORTE_DEN_R
+   52 0000001A F04F 010F       MOV              R1, #0x0F
+   53 0000001E 6001            STR              R1,[R0]     ; digital enable al
+                                                            l pins to be used
+   54 00000020         
+   55 00000020         
+   56 00000020         loop
+   57 00000020         ; code that runs over and over goes here
+   58 00000020         
+   59 00000020 4B0F            LDR              R3, =GPIO_PORTE_DATA_R
+   60 00000022 681B            LDR              R3, [R3]
+   61 00000024         
+   62 00000024         
+   63 00000024 F007 0700       AND              R7, R7, #0
+   64 00000028 F003 0401       AND              R4, R3, #0x01
+   65 0000002C EA4F 0484       LSL              R4, #2
+   66 00000030         
+   67 00000030 F003 0502       AND              R5, R3, #0x02
+   68 00000034 EA4F 0545       LSL              R5, #1
+   69 00000038 F003 0604       AND              R6, R3, #0x04
+   70 0000003C         
+   71 0000003C 4637            MOV              R7, R6
+   72 0000003E EA87 0705       EOR              R7, R5
+   73 00000042 EA87 0704       EOR              R7, R4
+   74 00000046         
+   75 00000046 F087 0704       EOR              R7, #0x04
+   76 0000004A         
+   77 0000004A EA4F 0747       LSL              R7, #1      ; Shift it to the p
+                                                            osition of the outp
+                                                            ut bit 
+   78 0000004E         
+   79 0000004E 4804            LDR              R0,= GPIO_PORTE_DATA_R
+   80 00000050 6007            STR              R7, [R0]
+   81 00000052         
+   82 00000052 E7E5            B                loop
+   83 00000054         
+   84 00000054                 ALIGN                        ; make sure the end
+                                                             of this section is
+                                                             aligned
+   85 00000054                 END                          ; end of file
+              400FE608 
+              40024400 
+              4002451C 
+              400243FC 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4 --apcs=interw
+ork --depend=.\main.d -o.\main.o -I.\RTE\_Lab1 -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\
+5.4.0\CMSIS\Core\Include -IC:\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Inclu
+de\TM4C123 --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 526"
+ --predefine="_RTE_ SETA 1" --predefine="TM4C123GH6PM SETA 1" --list=.\main.lst
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+ main.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+DATA 00000000
+
+Symbol: DATA
+   Definitions
+      At line 31 in file main.s
+   Uses
+      None
+Comment: DATA unused
+1 symbol
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 34 in file main.s
+   Uses
+      None
+Comment: .text unused
+Start 00000000
+
+Symbol: Start
+   Definitions
+      At line 36 in file main.s
+   Uses
+      At line 35 in file main.s
+Comment: Start used once
+loop 00000020
+
+Symbol: loop
+   Definitions
+      At line 56 in file main.s
+   Uses
+      At line 82 in file main.s
+Comment: loop used once
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+GPIO_PORTE_DATA_R 400243FC
+
+Symbol: GPIO_PORTE_DATA_R
+   Definitions
+      At line 25 in file main.s
+   Uses
+      At line 59 in file main.s
+      At line 79 in file main.s
+
+GPIO_PORTE_DEN_R 4002451C
+
+Symbol: GPIO_PORTE_DEN_R
+   Definitions
+      At line 27 in file main.s
+   Uses
+      At line 51 in file main.s
+Comment: GPIO_PORTE_DEN_R used once
+GPIO_PORTE_DIR_R 40024400
+
+Symbol: GPIO_PORTE_DIR_R
+   Definitions
+      At line 26 in file main.s
+   Uses
+      At line 47 in file main.s
+Comment: GPIO_PORTE_DIR_R used once
+SYSCTL_RCGCGPIO_R 400FE608
+
+Symbol: SYSCTL_RCGCGPIO_R
+   Definitions
+      At line 28 in file main.s
+   Uses
+      At line 38 in file main.s
+Comment: SYSCTL_RCGCGPIO_R used once
+4 symbols
+344 symbols in table
